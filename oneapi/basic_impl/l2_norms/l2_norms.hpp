@@ -3,16 +3,18 @@
 
 #include <CL/sycl.hpp>
 
-#include <faiss/oneapi/utils/kernel.hpp>
+#include <faiss/oneapi/kernel_protos.hpp>
 
 namespace faiss::oneapi::basic_impl
 {
-    using namespace faiss::oneapi::utils;
-
-    class l2_norms_kernel : faiss::oneapi::utils::kernel
+    template<typename type>
+    struct l2_norms_kernel : public l2_norms_kernel_proto<type>
     {
-        //Overriding of kernel functionality
-
+        private:
+            l2_norms_kernel(cl::sycl::queue& q);
+        private:
+            const size_t pref_vec_width, pref_wg_size;
+            cl::sycl::queue& q;
     };
 }
 
