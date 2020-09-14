@@ -99,7 +99,7 @@ void fvec_norms_L2 (float * __restrict nr,
     }
 }
 
-void fvec_norms_L2sqr (float * __restrict nr,
+static void fvec_norms_L2sqr (float * __restrict nr,
                        const float * __restrict x,
                        size_t d, size_t nx)
 {
@@ -223,6 +223,26 @@ static void knn_L2sqr_sse (
 
 }
 
+template<typename heap_t = float_minheap_array_t>
+static void reorder_heap_(heap_t* h)
+{
+    h->reorder();
+}
+
+template<typename heap_t = float_minheap_array_t>
+static void heapify_heap_(heap_t* h)
+{
+    h->heapify();
+}
+
+template<typename heap_t = float_minheap_array_t>
+static void addn_heap_( heap_t* h, size_t nj, 
+                        const typename heap_t::T *vin, 
+                        typename heap_t::TI j0,
+                        size_t i0, int64_t ni)
+{
+    h->addn(nj, vin, j0, i0, ni);
+}
 
 /** Find the nearest neighbors for nx queries in a set of ny vectors */
 static void knn_inner_product_blas (
@@ -231,7 +251,7 @@ static void knn_inner_product_blas (
         size_t d, size_t nx, size_t ny,
         float_minheap_array_t * res)
 {
-    res->heapify ();
+    heapify_heap_(res);
 
     // BLAS does not like empty matrices
     if (nx == 0 || ny == 0) return;
@@ -259,11 +279,11 @@ static void knn_inner_product_blas (
             }
 
             /* collect maxima */
-            res->addn (j1 - j0, ip_block.get(), j0, i0, i1 - i0);
+            addn_heap_(res, j1 - j0, ip_block.get(), j0, i0, i1 - i0);
         }
         InterruptCallback::check ();
     }
-    res->reorder ();
+    reorder_heap_(res);
 }
 
 // distance correction is an operator that can be applied to transform
