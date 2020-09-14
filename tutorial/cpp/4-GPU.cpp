@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cassert>
+#include <random>
 
 #include <faiss/IndexFlat.h>
 #include <faiss/gpu/GpuIndexFlat.h>
@@ -20,18 +21,21 @@ int main() {
     int nb = 100000;                       // database size
     int nq = 10000;                        // nb of queries
 
+    std::mt19937 rng;
+    std::uniform_real_distribution<> distrib;
+
     float *xb = new float[d * nb];
     float *xq = new float[d * nq];
 
     for(int i = 0; i < nb; i++) {
         for(int j = 0; j < d; j++)
-            xb[d * i + j] = drand48();
+            xb[d * i + j] = distrib(rng);
         xb[d * i] += i / 1000.;
     }
 
     for(int i = 0; i < nq; i++) {
         for(int j = 0; j < d; j++)
-            xq[d * i + j] = drand48();
+            xq[d * i + j] = distrib(rng);
         xq[d * i] += i / 1000.;
     }
 
@@ -75,8 +79,7 @@ int main() {
     // Using an IVF index
 
     int nlist = 100;
-    faiss::gpu::GpuIndexIVFFlat index_ivf(&res, d, nlist, faiss::METRIC_L2);
-    // here we specify METRIC_L2, by default it performs inner-product search
+    faiss::gpu::GpuIndexIVFFlat index_ivf(&res, d, nlist);
 
     assert(!index_ivf.is_trained);
     index_ivf.train(nb, xb);

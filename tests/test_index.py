@@ -445,7 +445,8 @@ class TestHNSW(unittest.TestCase):
         self.io_and_retest(index, Dhnsw, Ihnsw)
 
     def io_and_retest(self, index, Dhnsw, Ihnsw):
-        _, tmpfile = tempfile.mkstemp()
+        fd, tmpfile = tempfile.mkstemp()
+        os.close(fd)
         try:
             faiss.write_index(index, tmpfile)
             index2 = faiss.read_index(tmpfile)
@@ -580,7 +581,7 @@ class TestReconsHash(unittest.TestCase):
         # with lookup
         index.reset()
         rs = np.random.RandomState(123)
-        ids = rs.choice(10000, size=200, replace=False)
+        ids = rs.choice(10000, size=200, replace=False).astype(np.int64)
         index.add_with_ids(faiss.randn((100, d), 345), ids[:100])
         index.set_direct_map_type(faiss.DirectMap.Hashtable)
         index.add_with_ids(faiss.randn((100, d), 678), ids[100:])
